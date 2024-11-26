@@ -3,7 +3,6 @@ from tkinter import messagebox
 import sqlite3
 from datetime import datetime
 
-# Function to interact with the database
 def execute_query(query, params=()):
     conn = sqlite3.connect('post_office.db')
     cursor = conn.cursor()
@@ -54,7 +53,22 @@ def add_transaction():
     else:
         messagebox.showwarning("Input Error", "Please fill out all fields.")
 
-# Creating the main window
+# View Transactions
+def view_transactions():
+    conn = sqlite3.connect('post_office.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM transactions")
+    transactions = cursor.fetchall()
+    conn.close()
+
+    if transactions:
+        text_output.delete(1.0, tk.END)
+        for transaction in transactions:
+            text_output.insert(tk.END, f"ID: {transaction[0]}, Customer ID: {transaction[1]}, Type: {transaction[2]}, Date: {transaction[3]}, Amount: {transaction[4]:.2f}\n")
+    else:
+        messagebox.showinfo("No Data", "No transactions found.")
+
+# Create the main window
 root = tk.Tk()
 root.title("Post Office Management System")
 
@@ -79,12 +93,17 @@ button_add_customer.grid(row=2, columnspan=2)
 button_view_customers = tk.Button(root, text="View Customers", command=view_customers)
 button_view_customers.grid(row=1, column=0, pady=10)
 
-text_output = tk.Text(root, width=50, height=10)
-text_output.grid(row=2, column=0, pady=10)
+# View Transactions Section
+button_view_transactions = tk.Button(root, text="View Transactions", command=view_transactions)
+button_view_transactions.grid(row=1, column=1, pady=10)
+
+# Text Output Section
+text_output = tk.Text(root, width=70, height=15)
+text_output.grid(row=2, column=0, columnspan=2, pady=10)
 
 # Add Transaction Section
 frame_add_transaction = tk.LabelFrame(root, text="Add Transaction", padx=10, pady=10)
-frame_add_transaction.grid(row=0, column=1, padx=20, pady=10)
+frame_add_transaction.grid(row=0, column=2, padx=20, pady=10)
 
 label_customer_id = tk.Label(frame_add_transaction, text="Customer ID")
 label_customer_id.grid(row=0, column=0)
