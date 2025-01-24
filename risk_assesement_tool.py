@@ -25,6 +25,7 @@ VULNERABLE_FUNCTION_PATTERNS = {
     r"3DES_new\([^\)]*\)\s*,\s*3DES_MODE_ECB": "C function: 3DES with ECB mode is insecure.",
     r"AES_new\([^\)]*\)\s*,\s*AES_MODE_ECB": "C function: AES with ECB mode is insecure.",
     r"MD5_Init\([^\)]*\)": "C function: MD5 initialization detected, which is vulnerable to collisions.",
+    r"md5_hash\([^\)]*\)": "C function: MD5 initialization detected, which is vulnerable to collisions.",
     r"SHA1_Init\([^\)]*\)": "C function: SHA-1 initialization detected, which is vulnerable to collisions.",
 }
 

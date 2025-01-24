@@ -4,6 +4,66 @@ from Crypto.Cipher import DES
 import hashlib
 import base64
 import sqlite3
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_OAEP
+
+# Generate RSA keys and save to files
+def generate_rsa_keys():
+    key = RSA.generate(2048)
+    private_key = key.export_key()
+    public_key = key.publickey().export_key()
+
+    with open("private.pem", "wb") as private_file:
+        private_file.write(private_key)
+    
+    with open("public.pem", "wb") as public_file:
+        public_file.write(public_key)
+
+# Load RSA public key for encryption
+def load_rsa_public_key():
+    with open("public.pem", "rb") as public_file:
+        public_key = RSA.import_key(public_file.read())
+    return public_key
+
+# Load RSA private key for decryption (if needed later)
+def load_rsa_private_key():
+    with open("private.pem", "rb") as private_file:
+        private_key = RSA.import_key(private_file.read())
+    return private_key
+
+# Encrypt data using RSA
+def rsa_encrypt(public_key, data):
+    cipher = PKCS1_OAEP.new(public_key)
+    encrypted_data = cipher.encrypt(data.encode('utf-8'))
+    return base64.b64encode(encrypted_data).decode('utf-8')
+
+# Save encrypted order to the database
+def save_order_with_rsa(user_id, product_id):
+    # Load RSA public key
+    public_key = load_rsa_public_key()
+    print(public_key)
+
+    # Encrypt order data
+    encrypted_user_id = rsa_encrypt(public_key, str(user_id))
+    encrypted_product_id = rsa_encrypt(public_key, str(product_id))
+
+    # Save encrypted data to the database
+    conn = sqlite3.connect('eshop.db')
+    cursor = conn.cursor()
+
+    # Ensure the 'encrypted_orders' table exists
+    cursor.execute('''CREATE TABLE IF NOT EXISTS encrypted_orders (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        encrypted_user_id TEXT,
+                        encrypted_product_id TEXT)''')
+
+    # Insert encrypted order
+    cursor.execute('INSERT INTO encrypted_orders (encrypted_user_id, encrypted_product_id) VALUES (?, ?)',
+                   (encrypted_user_id, encrypted_product_id))
+    conn.commit()
+    conn.close()
+
+    print("Order saved with RSA encryption!")
 
 # Utility functions for encryption and hashing
 def md5_hash(data):
@@ -26,7 +86,6 @@ def des_encrypt(key, plaintext):
     encrypted = cipher.encrypt(padded_text.encode('utf-8'))
     return base64.b64encode(encrypted).decode('utf-8')
 
-# Database setup (same as previous)
 def setup_database():
     conn = sqlite3.connect('eshop.db')
     cursor = conn.cursor()
@@ -70,7 +129,6 @@ def setup_database():
     conn.close()
 
 
-# GUI application class
 class EShopApp(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -161,6 +219,10 @@ class EShopApp(QMainWindow):
         self.layout.addWidget(product_list)
 
         # Add a Buy button
+        view_bought_items_button = QPushButton('View Bought Items')
+        view_bought_items_button.clicked.connect(self.show_bought_items)
+        self.layout.addWidget(view_bought_items_button)
+
         buy_button = QPushButton('Buy Selected Product')
         buy_button.clicked.connect(lambda: self.buy_product(product_list))
         self.layout.addWidget(buy_button)
@@ -186,6 +248,7 @@ class EShopApp(QMainWindow):
             conn.close()
         else:
             QMessageBox.warning(self, 'Error', 'Please select a product to buy.')
+    
 
     def show_credit_card_page(self):
         self.clear_layout(self.layout)
@@ -214,6 +277,38 @@ class EShopApp(QMainWindow):
         container = QWidget()
         container.setLayout(self.layout)
         self.setCentralWidget(container)
+    
+
+    def show_bought_items(self):
+        self.clear_layout(self.layout)
+
+        self.label = QLabel('Your Bought Items:')
+        self.layout.addWidget(self.label)
+
+        # Fetch and display bought items
+        bought_items_list = QListWidget(self)
+        conn = sqlite3.connect('eshop.db')
+        cursor = conn.cursor()
+        cursor.execute('''SELECT products.name, products.description, products.price 
+                          FROM orders 
+                          JOIN products ON orders.product_id = products.id 
+                          WHERE orders.user_id = ?''', (self.logged_in_user_id,))
+        bought_items = cursor.fetchall()
+        conn.close()
+
+        for item in bought_items:
+            bought_items_list.addItem(f"{item[0]} - {item[1]} - ${item[2]:.2f}")
+
+        self.layout.addWidget(bought_items_list)
+
+        # Back to Buy Page button
+        back_button = QPushButton('Back to Buy Page')
+        back_button.clicked.connect(self.show_buy_page)
+        self.layout.addWidget(back_button)
+
+        container = QWidget()
+        container.setLayout(self.layout)
+        self.setCentralWidget(container)
 
     def submit_payment(self):
         card_number = self.card_number_input.text()
@@ -224,26 +319,16 @@ class EShopApp(QMainWindow):
             QMessageBox.warning(self, 'Error', 'Please enter all credit card details.')
             return
 
-        # Encrypt the credit card details with DES
-        key = '12345678'  # DES key (8 bytes)
-        encrypted_card_number = des_encrypt(key, card_number)
-        encrypted_expiration = des_encrypt(key, expiration)
-        encrypted_cvv = des_encrypt(key, cvv)
+        key = '12345678'
+        des_encrypt(key, card_number)
+        des_encrypt(key, expiration)
+        des_encrypt(key, cvv)
 
-        # In a real application, you would send this encrypted data to a payment processor
         QMessageBox.information(self, 'Success', 'Payment successful! Your order is confirmed.')
-
-        # Simulate order insertion into database
-        conn = sqlite3.connect('eshop.db')
-        cursor = conn.cursor()
-        cursor.execute('INSERT INTO orders (user_id, product_id) VALUES (?, ?)', (self.logged_in_user_id, self.selected_product_id))
-        conn.commit()
-        conn.close()
-
+        save_order_with_rsa(self.logged_in_user_id, self.selected_product_id)
         self.show_buy_page()
 
     def clear_layout(self, layout):
-        # Clear all widgets from the layout
         for i in reversed(range(layout.count())):
             widget = layout.itemAt(i).widget()
             if widget is not None:
@@ -251,6 +336,7 @@ class EShopApp(QMainWindow):
 
 if __name__ == '__main__':
     setup_database()
+    generate_rsa_keys()
     app = QApplication(sys.argv)
     ex = EShopApp()
     ex.show()
