@@ -1,5 +1,6 @@
 import os
 import re
+import json
 
 # Define a list of weak cryptographic primitives to search for, with refined regex patterns for specific function calls
 VULNERABLE_FUNCTION_PATTERNS = {
@@ -113,14 +114,28 @@ def scan_folder_for_vulnerabilities(folder_path):
                     scan_results[file_path] = findings
 
     generate_full_report(scan_results)
+    save_scan_results(scan_results)
 
     print("\nScan complete.")
 
+def save_scan_results(scan_results, output_file="scan_results.json"):
+    """Save scan results to a JSON file."""
+    try:
+        with open(output_file, "w", encoding="utf-8") as f:
+            json.dump(scan_results, f, indent=4)
+        print(f"Scan results saved to {output_file}.")
+    except Exception as e:
+        print(f"Error saving scan results: {e}")
+
+
 if __name__ == "__main__":
     folder = input("Enter the folder path to scan: ")
-
+    scan_folder_for_vulnerabilities(folder)
     if os.path.isdir(folder):
         print(f"Scanning folder: {folder}\n")
         scan_folder_for_vulnerabilities(folder)
     else:
         print("Invalid folder path. Please try again.")
+
+
+
