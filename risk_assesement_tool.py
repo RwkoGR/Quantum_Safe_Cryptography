@@ -83,7 +83,7 @@ def scan_file_for_vulnerabilities(filename):
 
 def generate_full_report(scan_results):
     """Generate a single risk assessment report for all scanned files."""
-    with open("risk_assessment.txt", "w") as report:
+    with open("scan_results.txt", "w") as report:
         report.write("Risk Assessment Report for All Files\n")
         report.write("=" * 50 + "\n\n")
 
@@ -99,7 +99,7 @@ def generate_full_report(scan_results):
         else:
             report.write("No vulnerabilities were found in any files.\n\n")
 
-    print("Full risk assessment report has been generated in 'risk_assessment.txt'.")
+    print("Full risk assessment report has been generated in 'scan_results.txt'.")
 
 def scan_folder_for_vulnerabilities(folder_path):
     scan_results = {}

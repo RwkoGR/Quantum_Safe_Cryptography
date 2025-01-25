@@ -1,0 +1,39 @@
+Risk Assessment Report for All Files
+==================================================
+
+
+
+File: test/e-shop.py
+--------------------------------------------------
+Line 3: from Crypto.Cipher import DES
+Risk Level: Medium
+Description: DES: Outdated; 56-bit key size is insufficient for modern security.
+--------------------------------------------------
+Line 12: key = RSA.generate(2048)
+Risk Level: Medium
+Description: RSA with 2048, 3072+ bits: Secure against classical attacks but vulnerable to quantum computing.
+--------------------------------------------------
+Line 69: def md5_hash(data):
+Risk Level: Medium
+Description: C function: MD5 initialization detected, which is vulnerable to collisions.
+--------------------------------------------------
+Line 73: cipher = AES.new(key.encode('utf-8'), AES.MODE_ECB)
+Risk Level: Medium
+Description: AES: Outdated; 56-bit key size is insufficient for modern security.
+--------------------------------------------------
+Line 79: cipher = AES.new(key.encode('utf-8'), AES.MODE_ECB)
+Risk Level: Medium
+Description: AES: Outdated; 56-bit key size is insufficient for modern security.
+--------------------------------------------------
+Line 84: cipher = DES.new(key.encode('utf-8'), DES.MODE_ECB)
+Risk Level: Medium
+Description: DES: Outdated; 56-bit key size is insufficient for modern security.
+--------------------------------------------------
+Line 170: hashed_password = md5_hash(password)
+Risk Level: Medium
+Description: C function: MD5 initialization detected, which is vulnerable to collisions.
+--------------------------------------------------
+Line 188: hashed_password = md5_hash(password)
+Risk Level: Medium
+Description: C function: MD5 initialization detected, which is vulnerable to collisions.
+--------------------------------------------------

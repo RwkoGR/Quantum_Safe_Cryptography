@@ -14,15 +14,15 @@ SHA3_FUNCTIONS = {
     "python": """
 def SHA3_hash(password, stored_hash=None):
     import hashlib
+
     if stored_hash is None:
-        salt = os.urandom(16)  # Generate a random salt
-        hashed = hashlib.sha3_256(salt + password.encode('utf-8')).digest()
-        return salt + hashed  # Store the salt with the hash
+        # Hash the password directly using SHA3-256
+        hashed = hashlib.sha3_256(password.encode('utf-8')).digest()
+        return hashed
     else:
-        salt = stored_hash[:16]  # Extract the salt
-        stored_hashed = stored_hash[16:]
-        test_hashed = hashlib.sha3_256(salt + password.encode('utf-8')).digest()
-        return test_hashed == stored_hashed
+        # Compare the provided password's hash with the stored hash
+        test_hashed = hashlib.sha3_256(password.encode('utf-8')).digest()
+        return test_hashed == stored_hash
 """,
     "javascript": """
 function SHA3_hash(password, storedHash = null) {
@@ -114,25 +114,27 @@ def add_functions(file_content, language):
 def replace_vulnerable_code(file_content, scan_results, language):
     changes = []
     lines = file_content.splitlines()
-    print(f"\tin vulnerable code for {language}\n")
 
     for finding in scan_results:
-        print(f"\tin vulnerable function call for {finding}\n")
         line_number = finding["line_no"]-1 # Convert to 0-based index
-        original_line = lines[line_number + 18]
+        original_line = lines[line_number + 14]
         description = finding["description"]
         line_code = finding["line"]
 
         if language == "python" and "md5_hash" in line_code:
-            print("\n\tPRIN!!!!!!!!!!!")
             if line_code.strip().startswith("def"):  # Check if the line starts with "def"
-                print("(!) Cannot change function definition. \n")
+                print(f"[MANUAL REVIEW] Line {line_number}: Definition of unsafe MD5 hash function")
                 continue
             new_line = original_line.replace("md5_hash", "SHA3_hash")
-            print(f"\t\treplacing {original_line} with {new_line}\n")
-            lines[line_number+18] = new_line
-            changes.append((line_number + 16, original_line, new_line))
-
+            lines[line_number+14] = new_line
+            changes.append((line_number + 15, original_line, new_line))
+        elif language == "python" and "RSA" in line_code and "2048" in line_code:
+            print(f"[MANUAL REVIEW] Line {line_number}: RSA with 2048 bits is unsecure, consider changing your key size")
+            continue
+        elif language == "python" and "MODE_ECB" in line_code:
+            print(f"[MANUAL REVIEW] Line {line_number}: ECB MODE is generally unsecure, consider migrating to another mode")
+        elif language == "python" and "import" in line_code:
+            print(f"[MANUAL REVIEW] Line {line_number}: You have imported an unsecure crypto primitive: {line_code}, consider removing it")    
         # elif language == "javascript" and "encrypt" in description or "md5" in description:
         #     new_line = original_line.replace("md5", "AES256_safe_encrypt")
         #     lines[line_number] = new_line

@@ -1,3 +1,4 @@
+import hashlib
 import sys,os
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QLineEdit, QPushButton, QVBoxLayout, QWidget, QMessageBox, QListWidget
 from Crypto.Cipher import DES
@@ -6,6 +7,19 @@ import base64
 import sqlite3
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
+
+
+def SHA3_hash(password, stored_hash=None):
+    import hashlib
+
+    if stored_hash is None:
+        # Hash the password directly using SHA3-256
+        hashed = hashlib.sha3_256(password.encode('utf-8')).digest()
+        return hashed
+    else:
+        # Compare the provided password's hash with the stored hash
+        test_hashed = hashlib.sha3_256(password.encode('utf-8')).digest()
+        return test_hashed == stored_hash
 
 # Generate RSA keys and save to files
 def generate_rsa_keys():
@@ -167,7 +181,7 @@ class EShopApp(QMainWindow):
     def login(self):
         username = self.username_input.text()
         password = self.password_input.text()
-        hashed_password = md5_hash(password)
+        hashed_password = SHA3_hash(password)
 
         conn = sqlite3.connect('eshop.db')
         cursor = conn.cursor()
@@ -185,7 +199,7 @@ class EShopApp(QMainWindow):
     def register(self):
         username = self.username_input.text()
         password = self.password_input.text()
-        hashed_password = md5_hash(password)
+        hashed_password = SHA3_hash(password)
 
         conn = sqlite3.connect('eshop.db')
         cursor = conn.cursor()

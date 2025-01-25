@@ -1,0 +1,52 @@
+{
+    "test/e-shop.py": [
+        {
+            "line_no": 3,
+            "line": "from Crypto.Cipher import DES",
+            "risk": "Medium",
+            "description": "DES: Outdated; 56-bit key size is insufficient for modern security."
+        },
+        {
+            "line_no": 12,
+            "line": "key = RSA.generate(2048)",
+            "risk": "Medium",
+            "description": "RSA with 2048, 3072+ bits: Secure against classical attacks but vulnerable to quantum computing."
+        },
+        {
+            "line_no": 69,
+            "line": "def md5_hash(data):",
+            "risk": "Medium",
+            "description": "C function: MD5 initialization detected, which is vulnerable to collisions."
+        },
+        {
+            "line_no": 73,
+            "line": "cipher = AES.new(key.encode('utf-8'), AES.MODE_ECB)",
+            "risk": "Medium",
+            "description": "AES: Outdated; 56-bit key size is insufficient for modern security."
+        },
+        {
+            "line_no": 79,
+            "line": "cipher = AES.new(key.encode('utf-8'), AES.MODE_ECB)",
+            "risk": "Medium",
+            "description": "AES: Outdated; 56-bit key size is insufficient for modern security."
+        },
+        {
+            "line_no": 84,
+            "line": "cipher = DES.new(key.encode('utf-8'), DES.MODE_ECB)",
+            "risk": "Medium",
+            "description": "DES: Outdated; 56-bit key size is insufficient for modern security."
+        },
+        {
+            "line_no": 170,
+            "line": "hashed_password = md5_hash(password)",
+            "risk": "Medium",
+            "description": "C function: MD5 initialization detected, which is vulnerable to collisions."
+        },
+        {
+            "line_no": 188,
+            "line": "hashed_password = md5_hash(password)",
+            "risk": "Medium",
+            "description": "C function: MD5 initialization detected, which is vulnerable to collisions."
+        }
+    ]
+}
